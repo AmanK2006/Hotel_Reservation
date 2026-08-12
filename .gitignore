@@ -18,3 +18,14 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# Logs
+logs/
+*.log
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# GCP Credentials / Secrets
+*.json
+.env

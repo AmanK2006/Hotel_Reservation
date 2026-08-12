@@ -1,12 +1,11 @@
-from __unknown__ import RAW_FILE_PATH
-from __unknown__ import RAW_DIR
 import os
 import pandas as pd
 from google.cloud import storage
 from src.logger import get_logger
-from src.custom_exceptions import CustomException
+from src.custom_exceptions import CustomExceptions
 from utils.common_functions import read_yaml
-from config.paths_config import *
+from config.paths_config import RAW_DIR, RAW_FILE_PATH, TRAIN_FILE_PATH, TEST_FILE_PATH, CONFIG_PATH
+from sklearn.model_selection import train_test_split
 
 logger = get_logger(__name__)
 
@@ -31,7 +30,41 @@ class DataIngestion:
 
         except Exception as e:
             logger.error("Error while downloading CSV from GCP")
-            raise CustomException("Failed to download CSV from GCP", e)
+            raise CustomExceptions("Failed to download CSV from GCP", e)
+        
+    def split_data(self):
+        try:
+            logger.info("Splitting process has started")
+            df = pd.read_csv(RAW_FILE_PATH)
+            train_data, test_data = train_test_split(df, test_size = 1 - self.config["train_ratio"], random_state = 42)
+            train_data.to_csv(TRAIN_FILE_PATH, index=False)
+            test_data.to_csv(TEST_FILE_PATH, index=False)
+            logger.info("Successfully split data")
 
+            return TRAIN_FILE_PATH, TEST_FILE_PATH
+
+        except Exception as e:
+            logger.error("Error while splitting data")
+            raise CustomExceptions("Failed to split data", e)
+
+    def run(self):
+        try:
+            logger.info("The Data Ingestion process has started")
+
+            self.download_csv_from_gcp()
+            self.split_data()
+
+            logger.info("The Data Ingestion process has ended")
+
+        except CustomExceptions as ce:
+            logger.error(f"{CustomExceptions, str(ce)}") 
+        
+        finally:
+            logger.info("Data Ingestion finally completed")
+
+if __name__ == "__main__":
+    config = read_yaml(CONFIG_PATH)
+    data_ingestion_obj = DataIngestion(config)
+    data_ingestion_obj.run()
 
 
