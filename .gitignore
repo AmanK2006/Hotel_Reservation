@@ -1,0 +1,20 @@
+# Virtual Environment
+.venv/
+
+# Build and Package Metadata
+*.egg-info/
+build/
+dist/
+
+# MLOps Artifacts (Datasets, Models, Outputs)
+artifacts/
+
+# Python Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS Specific Files
+.vscode/
+.idea/
+.DS_Store
