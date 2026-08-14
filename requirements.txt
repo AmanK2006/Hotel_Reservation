@@ -8,3 +8,6 @@ scikit-learn
 google-cloud-storage
 
 pyyaml
+imbalanced-learn
+xgboost
+lightgbm
