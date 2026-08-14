@@ -1,4 +1,23 @@
 data_ingestion:
-  bucket_name : "amannk2006_bucket"
-  bucket_file_name : "Hotel Reservations.csv"
-  train_ratio : 0.8
+  bucket_name: "amannk2006_bucket"
+  bucket_file_name: "Hotel Reservations.csv"
+  train_ratio: 0.8
+
+data_processing:
+  categorical_cols:
+    - type_of_meal_plan
+    - room_type_reserved
+    - market_segment_type
+
+  numerical_cols:
+    - lead_time
+    - avg_price_per_room
+    - arrival_year
+    - arrival_month
+    - arrival_date
+    - no_of_special_requests
+    - no_of_previous_cancellations
+    - no_of_previous_bookings_not_canceled
+
+  skewness_threshold: 0.75
+  num_important_features: 10

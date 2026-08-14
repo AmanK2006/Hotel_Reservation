@@ -10,12 +10,12 @@ TEST_FILE_PATH = os.path.join(RAW_DIR, "test.csv")
 
 CONFIG_PATH = "config/config.yaml"
 
-############################### DATA PREPROCESSING ###########################
+############################### DATA PROCESSING ###########################
 
-PREPROCESSED_DIR = "artifacts/preprocessed"
-PREPROCESSED_TRAIN_PATH = os.path.join(PREPROCESSED_DIR, "train_preprocessed.csv")
-PREPROCESSED_TEST_PATH = os.path.join(PREPROCESSED_DIR, "test_preprocessed.csv")
-PREPROCESSOR_OBJ_PATH = os.path.join(PREPROCESSED_DIR, "preprocessor.pkl")
+PROCESSED_DIR = "artifacts/processed"
+
+PROCESSED_TRAIN_FILE = os.path.join(PROCESSED_DIR, "processed_train.csv")
+PROCESSED_TEST_FILE = os.path.join(PROCESSED_DIR, "processed_test.csv")
 
 __all__ = [
     "RAW_DIR",
@@ -23,8 +23,7 @@ __all__ = [
     "TRAIN_FILE_PATH",
     "TEST_FILE_PATH",
     "CONFIG_PATH",
-    "PREPROCESSED_DIR",
-    "PREPROCESSED_TRAIN_PATH",
-    "PREPROCESSED_TEST_PATH",
-    "PREPROCESSOR_OBJ_PATH",
+    "PROCESSED_DIR",
+    "PROCESSED_TRAIN_FILE",
+    "PROCESSED_TEST_FILE"
 ]
