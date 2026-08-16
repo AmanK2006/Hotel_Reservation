@@ -11,3 +11,7 @@ pyyaml
 imbalanced-learn
 xgboost
 lightgbm
+
+mlflow
+protobuf
+distutils

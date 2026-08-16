@@ -17,6 +17,11 @@ PROCESSED_DIR = "artifacts/processed"
 PROCESSED_TRAIN_FILE = os.path.join(PROCESSED_DIR, "processed_train.csv")
 PROCESSED_TEST_FILE = os.path.join(PROCESSED_DIR, "processed_test.csv")
 
+
+############################ MODEL TRAINING ############################
+
+MODEL_DIR = "artifacts/models/lightgbm_model.pkl"
+
 __all__ = [
     "RAW_DIR",
     "RAW_FILE_PATH",
@@ -25,5 +30,6 @@ __all__ = [
     "CONFIG_PATH",
     "PROCESSED_DIR",
     "PROCESSED_TRAIN_FILE",
-    "PROCESSED_TEST_FILE"
+    "PROCESSED_TEST_FILE",
+    "MODEL_DIR"
 ]

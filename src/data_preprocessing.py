@@ -38,27 +38,66 @@ class DataTransformation:
 
     def _basic_preprocessing(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
+            df = df.copy()
+
+            # 1. Drop identifiers
             if 'Booking_ID' in df.columns:
                 df = df.drop(columns=['Booking_ID'])
 
-            if 'booking_status' in df.columns and df['booking_status'].dtype == 'object':
-                df['booking_status'] = df['booking_status'].map({'Canceled': 1, 'Not_Canceled': 0})
+            # 2. Target mapping (Defensive check for existing ints, floats, or strings)
+            if 'booking_status' in df.columns:
+                # Log raw values to verify what's inside
+                logger.info(f"Raw booking_status unique values: {df['booking_status'].unique()}")
+                
+                # If already numeric (0 and 1)
+                if pd.api.types.is_numeric_dtype(df['booking_status']):
+                    df['booking_status'] = df['booking_status'].astype(int)
+                else:
+                    # Clean strings and map dynamically
+                    status_str = df['booking_status'].astype(str).str.strip().str.lower()
+                    
+                    mapping = {
+                        'canceled': 1,
+                        '1': 1,
+                        'not_canceled': 0,
+                        'not canceled': 0,
+                        '0': 0
+                    }
+                    
+                    df['booking_status'] = status_str.map(mapping)
 
+                # Verify target hasn't collapsed into 1 class
+                unique_classes = df['booking_status'].nunique()
+                if unique_classes < 2:
+                    logger.error(f"Target column collapsed! Unique values found: {df['booking_status'].unique()}")
+                    raise ValueError("Target mapping failed. Check raw values of booking_status in input CSV.")
+
+            # 3. Clip negative price
             if 'avg_price_per_room' in df.columns:
-                df['avg_price_per_room'] = df['avg_price_per_room'].clip(lower=0)
+                df['avg_price_per_room'] = pd.to_numeric(df['avg_price_per_room'], errors='coerce').clip(lower=0)
 
+            # 4. Feature engineering
             if 'no_of_adults' in df.columns and 'no_of_children' in df.columns:
-                df['total_guests'] = df['no_of_adults'] + df['no_of_children']
+                adults = pd.to_numeric(df['no_of_adults'], errors='coerce').fillna(0)
+                children = pd.to_numeric(df['no_of_children'], errors='coerce').fillna(0)
+                df['total_guests'] = adults + children
 
             if 'no_of_weekend_nights' in df.columns and 'no_of_week_nights' in df.columns:
-                df['total_stay_nights'] = df['no_of_weekend_nights'] + df['no_of_week_nights']
+                w_nights = pd.to_numeric(df['no_of_weekend_nights'], errors='coerce').fillna(0)
+                wk_nights = pd.to_numeric(df['no_of_week_nights'], errors='coerce').fillna(0)
+                df['total_stay_nights'] = w_nights + wk_nights
 
+            # 5. Drop component features
             drop_cols = ['no_of_weekend_nights', 'no_of_week_nights', 'no_of_adults', 'no_of_children']
-            df = df.drop(columns=[col for col in drop_cols if col in df.columns])
+            cols_to_drop = [col for col in drop_cols if col in df.columns]
+            if cols_to_drop:
+                df = df.drop(columns=cols_to_drop)
 
             return df
 
         except Exception as e:
+            print(f"\n--> RAW BASIC PREPROCESSING ERROR: {e}\n")
+            logger.error(f"Error in basic preprocessing helper: {e}")
             raise CustomExceptions("Error in basic preprocessing helper", sys) from e
 
     def preprocess_data(self, train_df: pd.DataFrame, test_df: pd.DataFrame):
@@ -67,35 +106,73 @@ class DataTransformation:
             train_df = self._basic_preprocessing(train_df)
             test_df = self._basic_preprocessing(test_df)
 
-            # Ordinal Encoding
-            train_df[self.cat_cols] = self.ordinal_encoder.fit_transform(train_df[self.cat_cols])
-            test_df[self.cat_cols] = self.ordinal_encoder.transform(test_df[self.cat_cols])
+            # 1. Safe Categorical Ordinal Encoding
+            valid_cat_cols = [col for col in self.cat_cols if col in train_df.columns]
+            
+            if valid_cat_cols:
+                logger.info(f"Encoding categorical columns: {valid_cat_cols}")
+                for col in valid_cat_cols:
+                    train_df[col] = train_df[col].fillna("Missing").astype(str).str.strip()
+                    test_df[col] = test_df[col].fillna("Missing").astype(str).str.strip()
 
-            # Dynamic Skewness Transformation
+                # Transform categorical columns safely
+                train_encoded = self.ordinal_encoder.fit_transform(train_df[valid_cat_cols])
+                test_encoded = self.ordinal_encoder.transform(test_df[valid_cat_cols])
+
+                train_df[valid_cat_cols] = pd.DataFrame(train_encoded, columns=valid_cat_cols, index=train_df.index)
+                test_df[valid_cat_cols] = pd.DataFrame(test_encoded, columns=valid_cat_cols, index=test_df.index)
+
+            # 2. Dynamic Skewness Transformation
             skewed_features = [
                 col for col in self.num_cols 
-                if col in train_df.columns and abs(train_df[col].skew()) > self.skewness_threshold
+                if col in train_df.columns 
+                and pd.api.types.is_numeric_dtype(train_df[col])
+                and abs(train_df[col].skew()) > self.skewness_threshold
             ]
 
             if skewed_features:
                 logger.info(f"Applying PowerTransformer to skewed features: {skewed_features}")
-                train_df[skewed_features] = self.power_transformer.fit_transform(train_df[skewed_features])
-                test_df[skewed_features] = self.power_transformer.transform(test_df[skewed_features])
+                
+                # Ensure no NaNs exist in numeric columns before PowerTransformer
+                train_df[skewed_features] = train_df[skewed_features].fillna(train_df[skewed_features].median())
+                test_df[skewed_features] = test_df[skewed_features].fillna(train_df[skewed_features].median())
+
+                train_pt = self.power_transformer.fit_transform(train_df[skewed_features])
+                test_pt = self.power_transformer.transform(test_df[skewed_features])
+
+                train_df[skewed_features] = pd.DataFrame(train_pt, columns=skewed_features, index=train_df.index)
+                test_df[skewed_features] = pd.DataFrame(test_pt, columns=skewed_features, index=test_df.index)
 
             return train_df, test_df
 
         except Exception as e:
-            logger.error("Failed during categorical/skewness transformation.")
+            logger.error(f"--> EXACT PREPROCESSING ERROR: {e}")
+            print(f"\n--> EXACT ERROR CAUSE: {e}\n")
             raise CustomExceptions("Preprocessing execution failed", sys) from e
 
     def handle_imbalanced_data(self, X_train: pd.DataFrame, y_train: pd.Series):
         try:
             logger.info("Applying SMOTE on training dataset...")
+            
+            # 1. Defensively convert all features to numeric & fill missing values
+            X_train = X_train.apply(pd.to_numeric, errors='coerce')
+            X_train = X_train.fillna(X_train.median())
+
+            # 2. Ensure y_train is integer type with no NaNs
+            y_train = y_train.fillna(0).astype(int)
+
+            # 3. Apply SMOTE
             smote = SMOTE(random_state=42)
             X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+
+            logger.info(f"Original class distribution: {y_train.value_counts().to_dict()}")
+            logger.info(f"Resampled class distribution: {pd.Series(y_train_res).value_counts().to_dict()}")
+
             return X_train_res, y_train_res
+
         except Exception as e:
-            logger.error("Error applying SMOTE.")
+            print(f"\n--> EXACT SMOTE ERROR: {e}\n")
+            logger.error(f"Error applying SMOTE: {e}")
             raise CustomExceptions("SMOTE resampling failed", sys) from e
 
     def select_top_features(self, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame):
