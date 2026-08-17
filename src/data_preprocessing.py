@@ -119,6 +119,13 @@ class DataTransformation:
                 train_encoded = self.ordinal_encoder.fit_transform(train_df[valid_cat_cols])
                 test_encoded = self.ordinal_encoder.transform(test_df[valid_cat_cols])
 
+                # LOG CATEGORICAL ENCODING MAPPINGS
+                logger.info("--- Categorical Ordinal Encoding Mappings ---")
+                for col, categories in zip(valid_cat_cols, self.ordinal_encoder.categories_):
+                    mapping = {category: idx for idx, category in enumerate(categories)}
+                    logger.info(f"Column '{col}' Mappings: {mapping}")
+                logger.info("---------------------------------------------")
+
                 train_df[valid_cat_cols] = pd.DataFrame(train_encoded, columns=valid_cat_cols, index=train_df.index)
                 test_df[valid_cat_cols] = pd.DataFrame(test_encoded, columns=valid_cat_cols, index=test_df.index)
 

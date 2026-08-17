@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking Prediction Input</title>
+    <!-- Linked external CSS from static folder -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h2>Hotel Booking Cancellation Predictor</h2>
+    <p class="subtitle">Enter the required feature parameters below to predict booking status.</p>
+
+    <!-- Action targets root endpoint '/' -->
+    <form id="predictionForm" action="/" method="POST">
+        <div class="form-grid">
+            
+            <!-- Continuous / Scaled Floats -->
+            <div class="form-group">
+                <label for="lead_time">Lead Time (Scaled)</label>
+                <input type="number" step="any" id="lead_time" name="lead_time" placeholder="e.g. -0.5057" required>
+            </div>
+
+            <div class="form-group">
+                <label for="no_of_special_requests">No. of Special Requests (Scaled)</label>
+                <input type="number" step="any" id="no_of_special_requests" name="no_of_special_requests" placeholder="e.g. -0.8973" required>
+            </div>
+
+            <div class="form-group">
+                <label for="avg_price_per_room">Avg Price Per Room ($)</label>
+                <input type="number" step="0.01" id="avg_price_per_room" name="avg_price_per_room" placeholder="e.g. 161.00" required>
+            </div>
+
+            <!-- Arrival Date / Time -->
+            <div class="form-group">
+                <label for="arrival_date">Arrival Date (Day of Month)</label>
+                <input type="number" min="1" max="31" id="arrival_date" name="arrival_date" placeholder="1 - 31" required>
+            </div>
+
+            <div class="form-group">
+                <label for="arrival_month">Arrival Month</label>
+                <select id="arrival_month" name="arrival_month" required>
+                    <option value="" disabled selected>Select Month</option>
+                    <option value="1">January (1)</option>
+                    <option value="2">February (2)</option>
+                    <option value="3">March (3)</option>
+                    <option value="4">April (4)</option>
+                    <option value="5">May (5)</option>
+                    <option value="6">June (6)</option>
+                    <option value="7">July (7)</option>
+                    <option value="8">August (8)</option>
+                    <option value="9">September (9)</option>
+                    <option value="10">October (10)</option>
+                    <option value="11">November (11)</option>
+                    <option value="12">December (12)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="arrival_year">Arrival Year (Scaled)</label>
+                <input type="number" step="any" id="arrival_year" name="arrival_year" placeholder="e.g. 0.4678 or -2.1375" required>
+            </div>
+
+            <!-- Categorical Dropdowns -->
+            <div class="form-group">
+                <label for="market_segment_type">Market Segment Type</label>
+                <select id="market_segment_type" name="market_segment_type" required>
+                    <option value="" disabled selected>Select Segment</option>
+                    <option value="0">Aviation (0)</option>
+                    <option value="1">Complementary (1)</option>
+                    <option value="2">Corporate (2)</option>
+                    <option value="3">Offline (3)</option>
+                    <option value="4">Online (4)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="type_of_meal_plan">Type of Meal Plan</label>
+                <select id="type_of_meal_plan" name="type_of_meal_plan" required>
+                    <option value="" disabled selected>Select Meal Plan</option>
+                    <option value="0">Meal Plan 1 (0)</option>
+                    <option value="1">Meal Plan 2 (1)</option>
+                    <option value="2">Meal Plan 3 (2)</option>
+                    <option value="3">Not Selected (3)</option>
+                </select>
+            </div>
+
+            <!-- Counts / Discrete Values -->
+            <div class="form-group">
+                <label for="total_stay_nights">Total Stay Nights</label>
+                <input type="number" min="0" id="total_stay_nights" name="total_stay_nights" placeholder="e.g. 3" required>
+            </div>
+
+            <div class="form-group">
+                <label for="total_guests">Total Guests</label>
+                <input type="number" min="1" id="total_guests" name="total_guests" placeholder="e.g. 2" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="btn-container">
+                <button type="submit">Predict Booking Status</button>
+            </div>
+
+        </div>
+    </form>
+
+    <!-- Dynamic Jinja2 Prediction Rendering -->
+    {% if prediction is not none %}
+        {% if prediction == 1 %}
+            <div class="result-box result-canceled">
+                Booking Status Prediction: <strong>Canceled (1)</strong>
+            </div>
+        {% else %}
+            <div class="result-box result-not-canceled">
+                Booking Status Prediction: <strong>Not Canceled (0)</strong>
+            </div>
+        {% endif %}
+    {% endif %}
+
+</div>
+
+</body>
+</html>
