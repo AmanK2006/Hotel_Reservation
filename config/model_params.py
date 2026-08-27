@@ -11,12 +11,12 @@ PARAM_DIST = {
 }
 
 RANDOM_SEARCH = {
-    "verbose" : 2,
-    "n_jobs" : -1,
-    "scoring" : "accuracy",
-    "cv" : 5,
-    "n_iter" : 30,
-    "random_state" : 42
+    "scoring": "accuracy",
+    "n_iter": 5,          # Keep iterations low (5 * 5 = 25 fits) for fast CI builds
+    "n_jobs": 1,          # CRITICAL: Prevent CPU deadlocks inside Docker/Jenkins
+    "verbose": 1,
+    "cv": 5,
+    "random_state": 42
 }
 
 __all__ = [
