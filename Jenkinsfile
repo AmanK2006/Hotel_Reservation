@@ -29,9 +29,12 @@ pipeline {
                     script {
                         echo 'Running ML training pipeline inside Jenkins............'
                         sh '''
-                            # Authenticate with GCP for GCS data access
+                            # Authenticate with GCP for GCS access
                             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                             gcloud config set project ${GCP_PROJECT}
+
+                            # Set PYTHONPATH to current root directory so 'src' imports resolve
+                            export PYTHONPATH=.
 
                             # Run pipeline inside synced uv virtual environment
                             uv run python pipelines/training_pipeline.py
@@ -51,7 +54,7 @@ pipeline {
                             gcloud config set project ${GCP_PROJECT}
                             gcloud auth configure-docker --quiet
 
-                            # Build container image with pre-trained model artifacts included
+                            # Build container image (includes generated artifacts)
                             docker build -t gcr.io/${GCP_PROJECT}/ml_project:latest .
 
                             # Push image to GCR
