@@ -36,8 +36,9 @@ pipeline {
                             # Set PYTHONPATH so 'src' imports resolve
                             export PYTHONPATH=.
 
-                            # Fallback MLflow tracking to local file storage to avoid 127.0.0.1:5000 connection errors
+                            # Enable local file store tracking in MLflow
                             export MLFLOW_TRACKING_URI=file:./mlruns
+                            export MLFLOW_ALLOW_FILE_STORE=true
 
                             # Execute training script using uv
                             uv run python pipelines/training_pipeline.py
