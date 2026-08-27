@@ -1,9 +1,10 @@
 # Use official lightweight Python 3.12 image
 FROM python:3.12-slim
 
-# Prevent Python from writing bytecode files & ensure unbuffered logging
+# Prevent Python from writing bytecode files, ensure unbuffered logging, & add /app to path
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
