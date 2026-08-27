@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for fast dependency resolution
 RUN pip install --no-cache-dir uv
 
-# Copy project specification & setup files first to leverage Docker layer caching
-COPY pyproject.toml setup.py uv.lock ./
+# Copy setup files AND requirements.txt to leverage Docker layer caching
+COPY pyproject.toml setup.py uv.lock requirements.txt* ./
 
 # Install project dependencies in system scope using uv
 RUN uv pip install --system --no-cache -e .
