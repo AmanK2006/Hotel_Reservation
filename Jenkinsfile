@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         GCP_PROJECT = 'hotel-reservation-mlops-506720'
-        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
     }
 
     stages {
@@ -24,23 +23,38 @@ pipeline {
             }
         }
 
+        stage('Run Model Training Pipeline') {
+            steps {
+                withCredentials([file(credentialsId: 'json-token', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    script {
+                        echo 'Running ML training pipeline inside Jenkins............'
+                        sh '''
+                            # Authenticate with GCP for GCS data access
+                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud config set project ${GCP_PROJECT}
+
+                            # Run pipeline inside synced uv virtual environment
+                            uv run python pipelines/training_pipeline.py
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Building and Pushing Docker Image to GCR') {
             steps {
                 withCredentials([file(credentialsId: 'json-token', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     script {
                         echo 'Building and Pushing Docker Image to GCR............'
-                        
                         sh '''
-                            # Authenticate service account
                             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                             gcloud config set project ${GCP_PROJECT}
                             gcloud auth configure-docker --quiet
 
-                            # Pass credentials into Docker build so GCS download succeeds
-                            docker build \
-                                --build-arg GCP_KEY="$(cat ${GOOGLE_APPLICATION_CREDENTIALS})" \
-                                -t gcr.io/${GCP_PROJECT}/ml_project:latest .
+                            # Build container image with pre-trained model artifacts included
+                            docker build -t gcr.io/${GCP_PROJECT}/ml_project:latest .
 
+                            # Push image to GCR
                             docker push gcr.io/${GCP_PROJECT}/ml_project:latest
                         '''
                     }
