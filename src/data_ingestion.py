@@ -57,14 +57,13 @@ class DataIngestion:
             logger.info("The Data Ingestion process has ended")
 
         except CustomExceptions as ce:
-            logger.error(f"{CustomExceptions, str(ce)}") 
+            logger.error(f"Data Ingestion Failed: {str(ce)}")
+            raise ce  # Re-raise so execution stops instantly if ingestion fails!
         
         finally:
-            logger.info("Data Ingestion finally completed")
+            logger.info("Data Ingestion completed step execution")
 
 if __name__ == "__main__":
     config = read_yaml(CONFIG_PATH)
     data_ingestion_obj = DataIngestion(config)
     data_ingestion_obj.run()
-
-
