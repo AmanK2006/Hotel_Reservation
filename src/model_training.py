@@ -20,7 +20,6 @@ class Model_Training:
         self.param_dist = param_dist
         self.random_search = random_search
         
-    
     def loading_and_splitting(self):
         try:
             logger.info("Loading the Data")
@@ -125,7 +124,10 @@ class Model_Training:
     
     def run_process(self):
         try:
-            mlflow.set_tracking_uri("http://127.0.0.1:5000")
+            # Dynamically fetch tracking URI from environment variable (with file fallback for CI)
+            tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
+            mlflow.set_tracking_uri(tracking_uri)
+
             with mlflow.start_run():
                 logger.info("Model Training starts here")
                 
