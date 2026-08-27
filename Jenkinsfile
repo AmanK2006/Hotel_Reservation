@@ -31,21 +31,16 @@ pipeline {
                         echo 'Building and Pushing Docker Image to GCR............'
                         
                         sh '''
-                            export PATH=$PATH:${GCLOUD_PATH}
-                            
-                            # Authenticate service account using the uploaded JSON key
+                            # Authenticate service account
                             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-
-                            # Set active GCP project
                             gcloud config set project ${GCP_PROJECT}
-
-                            # Configure Docker CLI to use GCP credentials
                             gcloud auth configure-docker --quiet
 
-                            # Build the ML application container
-                            docker build -t gcr.io/${GCP_PROJECT}/ml_project:latest .
+                            # Pass credentials into Docker build so GCS download succeeds
+                            docker build \
+                                --build-arg GCP_KEY="$(cat ${GOOGLE_APPLICATION_CREDENTIALS})" \
+                                -t gcr.io/${GCP_PROJECT}/ml_project:latest .
 
-                            # Push image to Container Registry
                             docker push gcr.io/${GCP_PROJECT}/ml_project:latest
                         '''
                     }

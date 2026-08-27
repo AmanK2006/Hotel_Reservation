@@ -1,35 +1,43 @@
 # Use official lightweight Python 3.12 image
 FROM python:3.12-slim
 
-# Prevent Python from writing bytecode files, ensure unbuffered logging, & add /app to path
+# Prevent Python from writing bytecode files & ensure unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 WORKDIR /app
 
-# Install system C++ runtime libraries (libgomp1 for ML models) & cleanup cache
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv for fast dependency resolution
+# Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy setup files AND requirements.txt to leverage Docker layer caching
+# Copy dependency configuration files
 COPY pyproject.toml setup.py uv.lock requirements.txt* ./
 
-# Install project dependencies in system scope using uv
+# Install project dependencies
 RUN uv pip install --system --no-cache -e .
 
-# Copy remaining application & pipeline code
+# Copy remaining project source code
 COPY . .
 
-# Run the training pipeline during build stage to generate model artifacts
-RUN python pipelines/training_pipeline.py
+# Accept build argument for GCP service account key
+ARG GCP_KEY
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json
+
+# Authenticate GCP dynamically, run training, and remove key artifact
+RUN echo "$GCP_KEY" > /app/gcp-key.json && \
+    python pipelines/training_pipeline.py && \
+    rm -f /app/gcp-key.json
+
+# Reset credential path env variable for runtime
+ENV GOOGLE_APPLICATION_CREDENTIALS=""
 
 EXPOSE 5000
 
-# Launch Flask application
 CMD ["python", "application.py"]
