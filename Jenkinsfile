@@ -33,10 +33,13 @@ pipeline {
                             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                             gcloud config set project ${GCP_PROJECT}
 
-                            # Set PYTHONPATH to current root directory so 'src' imports resolve
+                            # Set PYTHONPATH so 'src' imports resolve
                             export PYTHONPATH=.
 
-                            # Run pipeline inside synced uv virtual environment
+                            # Fallback MLflow tracking to local file storage to avoid 127.0.0.1:5000 connection errors
+                            export MLFLOW_TRACKING_URI=file:./mlruns
+
+                            # Execute training script using uv
                             uv run python pipelines/training_pipeline.py
                         '''
                     }
@@ -54,7 +57,7 @@ pipeline {
                             gcloud config set project ${GCP_PROJECT}
                             gcloud auth configure-docker --quiet
 
-                            # Build container image (includes generated artifacts)
+                            # Build container image with pre-trained model artifacts included
                             docker build -t gcr.io/${GCP_PROJECT}/ml_project:latest .
 
                             # Push image to GCR
