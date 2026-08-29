@@ -26,7 +26,7 @@ RUN uv pip install --system --no-cache -e .
 # Copy application source code
 COPY . .
 
-EXPOSE 5000
+EXPOSE 8080
 
 # Launch Flask application
 CMD ["python", "application.py"]

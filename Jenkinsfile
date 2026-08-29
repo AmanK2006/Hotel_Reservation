@@ -84,7 +84,7 @@ pipeline {
                                 --image=gcr.io/${GCP_PROJECT}/ml_project:latest \
                                 --platform=managed \
                                 --region=${GCP_REGION} \
-                                --port=5000 \
+                                --port=8080 \
                                 --allow-unauthenticated
                         '''
                     }
