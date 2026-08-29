@@ -83,7 +83,7 @@ pipeline {
                             -- image=gcr.io/${GCP_PROJECT}/ml_project:latest \
                             -- platform=managed \
                             -- region=us-central1 \
-                            -- allow=unauthenticated
+                            -- allow-unauthenticated
                         '''
                     }
                 }
