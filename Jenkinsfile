@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         GCP_PROJECT = 'hotel-reservation-mlops-506720'
+        GCP_REGION = 'us-central1'
+        SERVICE_NAME = 'ml-project'
     }
 
     stages {
@@ -77,13 +79,13 @@ pipeline {
                         sh '''
                             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                             gcloud config set project ${GCP_PROJECT}
-                            gcloud auth configure-docker --quiet
 
-                            gcloud run deploy ml-project \
-                            -- image=gcr.io/${GCP_PROJECT}/ml_project:latest \
-                            -- platform=managed \
-                            -- region=us-central1 \
-                            -- allow-unauthenticated
+                            gcloud run deploy ${SERVICE_NAME} \
+                                --image=gcr.io/${GCP_PROJECT}/ml_project:latest \
+                                --platform=managed \
+                                --region=${GCP_REGION} \
+                                --port=5000 \
+                                --allow-unauthenticated
                         '''
                     }
                 }
